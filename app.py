@@ -322,7 +322,7 @@ def delete_soiltest(current_user, id):
     if soiltest:
         db.session.delete(soiltest)
         db.session.commit()
-        return jsonify({'message': 'SoilTest record deleted successfully'})
+        return jsonify({'message': 'SoilTest record deleted successfully', 'id': id})
     else:
         return jsonify({'error': 'SoilTest record not found'}), 404
 
