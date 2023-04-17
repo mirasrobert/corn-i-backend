@@ -1,4 +1,5 @@
 from __main__ import app
+#from app import app
 
 import numpy as np
 import pandas as pd
@@ -44,7 +45,7 @@ def make_prediction(data):
 	# prepare new data for prediction
     new_data = np.array([data]) # replace with your own new data
     new_data = scaler.transform(new_data)
-    new_data = np.reshape(new_data, (1, 1, 1))
+    new_data = np.reshape(new_data, (1, 1, 1)) # reshape input to be [samples, time steps, features]
 
     # generate predictions for new data
     predictions = TRAINED_MODEL.predict(new_data)
