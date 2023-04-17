@@ -16,6 +16,7 @@ load_dotenv()  # take environment variables from .env.
 # Init app
 app = Flask(__name__)
 
+# Uncomment this to add prediction routes
 #import predictor_v2
 
 
