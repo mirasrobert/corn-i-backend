@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+flask-sqlalchemy = "*"
+flask-marshmallow = "*"
+marshmallow-sqlalchemy = "*"
+pymysql = "*"
+pyjwt = "*"
+bcrypt = "*"
+pandas = "*"
+tensorflow = "*"
+scikit-learn = "*"
+joblib = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
