@@ -10,17 +10,28 @@ from joblib import load
 import traceback
 
 
+import os
+
+# Get the path to the current file
+base_dir = os.path.abspath(os.path.dirname(__file__))
+
+# Define the path to the trained model
+model_path = os.path.join(base_dir, 'models', 'model_pH.h5')
+
 # load the trained model
-TRAINED_MODEL = load_model('my_model.h5')
+TRAINED_MODEL_PH = load_model(model_path)
 
 # define the look-back window and scaler
 look_back = 1
 
+# Define the path to the scaler object
+scaler_path = os.path.join(base_dir, 'scaler', 'scaler_pH.joblib')
+
 # Load the scaler object from the file
-scaler = load('scaler.joblib')
+scaler = load(scaler_path)
 
 
-def make_prediction(data):
+def make_prediction_ph(data):
     """
     Make a prediction for a single data point using the loaded model.
 
@@ -48,7 +59,7 @@ def make_prediction(data):
     new_data = np.reshape(new_data, (1, 1, 1)) # reshape input to be [samples, time steps, features]
 
     # generate predictions for new data
-    predictions = TRAINED_MODEL.predict(new_data)
+    predictions = TRAINED_MODEL_PH.predict(new_data)
 
     # convert predictions back to original scale
     predictions = scaler.inverse_transform(predictions)
@@ -56,8 +67,8 @@ def make_prediction(data):
  
 
 # define the endpoint for making predictions
-@app.route('/predict/v2', methods=['POST'])
-def predict():
+@app.route('/predict/ph', methods=['POST'])
+def predict_pH():
     """
     Endpoint for making a prediction for a single data point.
 
@@ -78,7 +89,7 @@ def predict():
         # get the data from the request
         data = request.get_json(force=True)['data']
         
-        pred_result = make_prediction(data)
+        pred_result = make_prediction_ph(data)
 
         # return the predictions as a json
         return jsonify({'predictions': str(pred_result)})

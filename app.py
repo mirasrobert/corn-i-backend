@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy 
 from flask_marshmallow import Marshmallow 
 from flask_marshmallow.fields import fields
@@ -9,15 +10,20 @@ import jwt
 import re
 import datetime
 
+
 import os
 from dotenv import load_dotenv
 load_dotenv()  # take environment variables from .env.
 
 # Init app
 app = Flask(__name__)
+CORS(app)
 
 # Comment this import to remove prediction routes
-import predictor_v2
+import nitrogen_prediction
+import phosphorus_prediction
+import potassium_prediction
+import pH_prediction
 
 
 # Database
@@ -157,7 +163,7 @@ def login_user():
 
 
 # Get Current Login User Route
-@app.route('/user', methods=['POST'])
+@app.route('/user', methods=['GET'])
 @token_required
 def get_user(current_user):
     user_data = user_schema.dump(current_user)
@@ -188,7 +194,7 @@ class SoilTest(db.Model):
 
 
 
-    def __init__(self, farm_site, client_name, lab_no, pH, P, K, N, MC):
+    def __init__(self, farm_site, client_name, lab_no, pH, P, K, N, MC, date_reported):
         self.farm_site = farm_site
         self.client_name = client_name
         self.lab_no = lab_no
@@ -197,6 +203,7 @@ class SoilTest(db.Model):
         self.K = K
         self.N = N
         self.MC = MC
+        self.date_reported = date_reported
 
 # SoilTest Schema For Serialization
 class SoilTestSchema(ma.SQLAlchemyAutoSchema):

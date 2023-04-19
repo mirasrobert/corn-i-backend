@@ -1,21 +1,37 @@
-
 from __main__ import app
+#from app import app
 
 import numpy as np
 import pandas as pd
 from keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 from flask import request, jsonify
+from joblib import load
+import traceback
 
+
+import os
+
+# Get the path to the current file
+base_dir = os.path.abspath(os.path.dirname(__file__))
+
+# Define the path to the trained model
+model_path = os.path.join(base_dir, 'models', 'model_K.h5')
 
 # load the trained model
-model = load_model('my_model.h5')
+TRAINED_MODEL_K = load_model(model_path)
 
 # define the look-back window and scaler
 look_back = 1
-scaler = MinMaxScaler(feature_range=(0, 1))
 
-def make_prediction(data):
+# Define the path to the scaler object
+scaler_path = os.path.join(base_dir, 'scaler', 'scaler_K.joblib')
+
+# Load the scaler object from the file
+scaler = load(scaler_path)
+
+
+def make_prediction_potassium(data):
     """
     Make a prediction for a single data point using the loaded model.
 
@@ -37,34 +53,33 @@ def make_prediction(data):
     if len(data) < look_back:
         raise ValueError(f"Data must contain at least {look_back} values.")
 
-    # convert the data to a numpy array and scale it
-    data = np.array(data).reshape(-1, 1)
-    data = scaler.fit_transform(data)
-    
-    # create a sequence of data points for the next month
-    sequence = data[-look_back:].tolist()
-    x = np.array(sequence).reshape(1, look_back, 1)
-    y = model.predict(x)[0][0]
-    
-    # inverse scale the data and return the prediction
-    prediction = scaler.inverse_transform([[y]])[0][0]
-    return prediction
+	# prepare new data for prediction
+    new_data = np.array([data]) # replace with your own new data
+    new_data = scaler.transform(new_data)
+    new_data = np.reshape(new_data, (1, 1, 1)) # reshape input to be [samples, time steps, features]
 
+    # generate predictions for new data
+    predictions = TRAINED_MODEL_K.predict(new_data)
+
+    # convert predictions back to original scale
+    predictions = scaler.inverse_transform(predictions)
+    return predictions[0][0] # returns [[63.44638]]
+ 
 
 # define the endpoint for making predictions
-@app.route('/predict/v1', methods=['POST'])
-def predict():
+@app.route('/predict/potassium', methods=['POST'])
+def predict_K():
     """
     Endpoint for making a prediction for a single data point.
 
     Expects a JSON payload with the following structure:
     {
-        "data": [35]
+        "data": [69]
     }
 
     Returns a JSON payload with the following structure:
     {
-        "predictions": 36.123
+        "predictions": "64.92"
     }
 
     Raises:
@@ -74,13 +89,12 @@ def predict():
         # get the data from the request
         data = request.get_json(force=True)['data']
         
-        # make predictions using the make_predictions function
-        predictions = make_prediction(data)
-        
+        pred_result = make_prediction_potassium(data)
+
         # return the predictions as a json
-        return jsonify({'predictions': str(predictions)})
+        return jsonify({'predictions': str(pred_result)})
     except ValueError as e:
         # return an error message as json
         return jsonify({'error': str(e)}), 400
     except:
-        return jsonify({'error': 'Invalid request. Failed to decode JSON object. Request Data is missing.'}), 400
+        return jsonify({'error': traceback.format_exc()}), 500
