@@ -13,22 +13,22 @@ import traceback
 import os
 
 # Get the path to the current file
-base_dir = os.path.abspath(os.path.dirname(__file__))
+base_dir_n = os.path.abspath(os.path.dirname(__file__))
 
 # Define the path to the trained model
-model_path = os.path.join(base_dir, 'models', 'model_N.h5')
+model_path_nitrogen = os.path.join(base_dir_n, 'models', 'model_N.h5')
 
 # load the trained model
-TRAINED_MODEL_N = load_model(model_path)
+TRAINED_MODEL_N = load_model(model_path_nitrogen)
 
 # define the look-back window and scaler
-look_back = 1
+look_back_n = 1
 
 # Define the path to the scaler object
-scaler_path = os.path.join(base_dir, 'scaler', 'scaler_N.joblib')
+scaler_path_n = os.path.join(base_dir_n, 'scaler', 'scaler_N.joblib')
 
 # Load the scaler object from the file
-scaler = load(scaler_path)
+scaler_nitrogen = load(scaler_path_n)
 
 
 def make_prediction_nitrogen(data):
@@ -50,19 +50,19 @@ def make_prediction_nitrogen(data):
         raise ValueError("Data must be a list.")
     if not all(isinstance(x, (int, float)) for x in data):
         raise ValueError("Data must contain only numbers.")
-    if len(data) < look_back:
-        raise ValueError(f"Data must contain at least {look_back} values.")
+    if len(data) < look_back_n:
+        raise ValueError(f"Data must contain at least {look_back_n} values.")
 
 	# prepare new data for prediction
     new_data = np.array([data]) # replace with your own new data
-    new_data = scaler.transform(new_data)
+    new_data = scaler_nitrogen.transform(new_data)
     new_data = np.reshape(new_data, (1, 1, 1)) # reshape input to be [samples, time steps, features]
 
     # generate predictions for new data
     predictions = TRAINED_MODEL_N.predict(new_data)
 
     # convert predictions back to original scale
-    predictions = scaler.inverse_transform(predictions)
+    predictions = scaler_nitrogen.inverse_transform(predictions)
     return predictions[0][0] # returns [[63.44638]]
  
 
@@ -98,3 +98,4 @@ def predict_N():
         return jsonify({'error': str(e)}), 400
     except:
         return jsonify({'error': traceback.format_exc()}), 500
+

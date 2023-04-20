@@ -20,10 +20,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Comment this import to remove prediction routes
-import nitrogen_prediction
-import phosphorus_prediction
-import potassium_prediction
-import pH_prediction
+import predictions
 
 
 # Database
@@ -334,6 +331,27 @@ def delete_soiltest(current_user, id):
     else:
         return jsonify({'error': 'SoilTest record not found'}), 404
 
+
+@app.route('/soiltests/<int:num>', methods=['GET'])
+def get_latest_soiltest(num):
+    farm_site = request.args.get('farm_site')
+    if farm_site:
+        soiltests = SoilTest.query.filter(SoilTest.farm_site == farm_site).order_by(SoilTest.date_reported.desc()).limit(num).all()
+    else:
+        soiltests = SoilTest.query.order_by(SoilTest.date_reported.desc()).limit(num).all()
+    result = soil_tests_schema.dump(soiltests)
+    return jsonify(result)
+
+
+@app.route('/soiltests/latest', methods=['GET'])
+def get_single_latest_soiltest():
+    farm_site = request.args.get('farm_site')
+    if farm_site:
+        soiltest = SoilTest.query.filter(SoilTest.farm_site == farm_site).order_by(SoilTest.date_reported.desc()).first()
+    else:
+        soiltest = SoilTest.query.order_by(SoilTest.date_reported.desc()).first()
+    result = soil_test_schema.dump(soiltest)
+    return jsonify(result)
 
 
 

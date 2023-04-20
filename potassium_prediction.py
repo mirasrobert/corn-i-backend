@@ -13,22 +13,22 @@ import traceback
 import os
 
 # Get the path to the current file
-base_dir = os.path.abspath(os.path.dirname(__file__))
+base_dir_k = os.path.abspath(os.path.dirname(__file__))
 
 # Define the path to the trained model
-model_path = os.path.join(base_dir, 'models', 'model_K.h5')
+model_path_k = os.path.join(base_dir_k, 'models', 'model_K.h5')
 
 # load the trained model
-TRAINED_MODEL_K = load_model(model_path)
+TRAINED_MODEL_K = load_model(model_path_k)
 
 # define the look-back window and scaler
-look_back = 1
+look_back_k = 1
 
 # Define the path to the scaler object
-scaler_path = os.path.join(base_dir, 'scaler', 'scaler_K.joblib')
+scaler_path_k = os.path.join(base_dir_k, 'scaler', 'scaler_K.joblib')
 
 # Load the scaler object from the file
-scaler = load(scaler_path)
+scaler_k = load(scaler_path_k)
 
 
 def make_prediction_potassium(data):
@@ -50,19 +50,19 @@ def make_prediction_potassium(data):
         raise ValueError("Data must be a list.")
     if not all(isinstance(x, (int, float)) for x in data):
         raise ValueError("Data must contain only numbers.")
-    if len(data) < look_back:
-        raise ValueError(f"Data must contain at least {look_back} values.")
+    if len(data) < look_back_k:
+        raise ValueError(f"Data must contain at least {look_back_k} values.")
 
 	# prepare new data for prediction
     new_data = np.array([data]) # replace with your own new data
-    new_data = scaler.transform(new_data)
+    new_data = scaler_k.transform(new_data)
     new_data = np.reshape(new_data, (1, 1, 1)) # reshape input to be [samples, time steps, features]
 
     # generate predictions for new data
     predictions = TRAINED_MODEL_K.predict(new_data)
 
     # convert predictions back to original scale
-    predictions = scaler.inverse_transform(predictions)
+    predictions = scaler_k.inverse_transform(predictions)
     return predictions[0][0] # returns [[63.44638]]
  
 
