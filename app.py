@@ -42,18 +42,20 @@ ma = Marshmallow(app)
 
 # User Class/Model
 class User(db.Model):
-  id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-  email = db.Column(db.String(200), unique=True, nullable=False)
-  password = db.Column(db.String(128), nullable=False)
-  created_at = db.Column(db.String(200), nullable=False, default=datetime.datetime.utcnow)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    email = db.Column(db.String(200), unique=True, nullable=False)
+    full_name = db.Column(db.String(200), nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    created_at = db.Column(db.String(200), nullable=False, default=datetime.datetime.utcnow)
 
+    def __init__(self, email, full_name, password):
+        self.email = email
+        self.full_name = full_name
+        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(10)).decode('utf-8')
 
-  def __init__(self, email, password):
-    self.email = email
-    self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(10)).decode('utf-8')
+    def check_password(self, password):
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
-  def check_password(self, password):
-    return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
 # User Schema For Serialization
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -100,11 +102,12 @@ def token_required(f):
 @app.route('/register', methods=['POST'])
 def register_user():
     email = request.json['email']
+    full_name = request.json['full_name'].upper()
     password = request.json['password']
     
-	# Check if email and password were provided
-    if not email or not password:
-        return jsonify({'message': 'Email and password are required.'}), 400
+    # Check if email, full_name and password were provided
+    if not email or not full_name or not password:
+        return jsonify({'message': 'Email, full name and password are required.'}), 400
     
     # Check if email is valid
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
@@ -113,12 +116,6 @@ def register_user():
     # Check if password is strong enough
     if len(password) < 8:
         return jsonify({'message': 'Password must be at least 8 characters long.'}), 400
-    # if not any(char.isdigit() for char in password):
-    #     return jsonify({'message': 'Password must contain at least one digit.'}), 400
-    # if not any(char.isupper() for char in password):
-    #     return jsonify({'message': 'Password must contain at least one uppercase letter.'}), 400
-    # if not any(char.islower() for char in password):
-    #     return jsonify({'message': 'Password must contain at least one lowercase letter.'}), 400
 
     # Check if user already exists
     existing_user = User.query.filter_by(email=email).first()
@@ -126,11 +123,12 @@ def register_user():
         return jsonify({'message': 'User already exists'}), 409
     
     # Create new user
-    new_user = User(email=email, password=password)
+    new_user = User(email=email, full_name=full_name, password=password)
     db.session.add(new_user)
     db.session.commit()
     result = user_schema.dump(new_user)
     return jsonify({'message': 'User created successfully', 'user': result}), 201
+
 
 
 # Login Route
