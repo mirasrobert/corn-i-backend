@@ -113,12 +113,12 @@ def register_user():
     # Check if password is strong enough
     if len(password) < 8:
         return jsonify({'message': 'Password must be at least 8 characters long.'}), 400
-    if not any(char.isdigit() for char in password):
-        return jsonify({'message': 'Password must contain at least one digit.'}), 400
-    if not any(char.isupper() for char in password):
-        return jsonify({'message': 'Password must contain at least one uppercase letter.'}), 400
-    if not any(char.islower() for char in password):
-        return jsonify({'message': 'Password must contain at least one lowercase letter.'}), 400
+    # if not any(char.isdigit() for char in password):
+    #     return jsonify({'message': 'Password must contain at least one digit.'}), 400
+    # if not any(char.isupper() for char in password):
+    #     return jsonify({'message': 'Password must contain at least one uppercase letter.'}), 400
+    # if not any(char.islower() for char in password):
+    #     return jsonify({'message': 'Password must contain at least one lowercase letter.'}), 400
 
     # Check if user already exists
     existing_user = User.query.filter_by(email=email).first()
@@ -173,6 +173,27 @@ def protected(current_user):
     user_data = user_schema.dump(current_user)
     return jsonify({'message': 'YOU HAVE VALID TOKEN. AUTHENTICATED', 'user': user_data}), 200
 
+
+# Get All SoilTest Records
+@app.route('/users', methods=['GET'])
+@token_required
+def get_all_users(current_user):
+    users = User.query.all()
+    result = users_schema.dump(users)
+    return jsonify(result)
+
+
+# Delete User Account
+@app.route('/users/<int:id>', methods=['DELETE'])
+@token_required
+def delete_user(current_user, id):
+    user = User.query.get(id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'Account deleted successfully', 'id': id})
+    else:
+        return jsonify({'message': 'User record not found'}), 404
 
 
 # SoilTest Class/Model
