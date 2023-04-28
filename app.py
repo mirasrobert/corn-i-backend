@@ -373,6 +373,72 @@ def get_single_latest_soiltest():
     return jsonify(result)
 
 
+## Mapping
+# Mapping Class/Model
+class Mapping(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Text, nullable=True)
+    data = db.Column(db.JSON, nullable=True)
+
+
+
+    def __init__(self, type, data):
+        self.type = type
+        self.data = data
+
+# SoilTest Schema For Serialization
+class MappingSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = Mapping
+
+
+# Init schema
+mapping_schema = MappingSchema() # mapping is used for serializing a single soil_test object
+multi_mapping_schema = MappingSchema(many=True) # multi_mapping_schema is used for serializing a list of soil_test objects
+
+
+# Get Mapping objects by type
+@app.route('/mapping', methods=['GET'])
+def get_mappings():
+    mapping_type = request.args.get('type')
+    if mapping_type:
+        mappings = Mapping.query.filter_by(type=mapping_type).all()
+    else:
+        mappings = Mapping.query.all()
+    result = multi_mapping_schema.dump(mappings)
+    return jsonify(result)
+
+
+# Get a single Mapping object by its type
+@app.route('/mapping/<string:type>', methods=['GET'])
+def get_mapping_by_type(type):
+    mapping = Mapping.query.filter_by(type=type).first()
+    if not mapping:
+        return jsonify({'message': 'Mapping not found'})
+    result = mapping_schema.dump(mapping)
+    return jsonify(result)
+
+
+# Update a Mapping object by its type
+@app.route('/mapping/<string:type>', methods=['PUT'])
+def update_mapping_by_type(type):
+    mapping = Mapping.query.filter_by(type=type).first()
+    if not mapping:
+        return jsonify({'message': 'Mapping not found'})
+
+    # update the Mapping object with the new data
+    mapping_data = request.get_json()
+    mapping.type = mapping_data.get('type', mapping.type)
+    mapping.data = mapping_data.get('data', mapping.data)
+
+    # commit the changes to the database
+    db.session.commit()
+
+    # serialize and return the updated Mapping object
+    result = mapping_schema.dump(mapping)
+    return jsonify(result)
+
+
 
 # Run Server
 if __name__ == '__main__':
